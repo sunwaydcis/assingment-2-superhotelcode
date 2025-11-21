@@ -19,10 +19,16 @@ object Assignment2:
       // Close stream after transforming data
       analysis.closeStream()
 
-      // Get booking data
-      val bookingList = analysis.getList
-      // TODO: remove this debug code
-//      bookingList.foreach(booking => println(booking.bookingId))
-      val counts = bookingList.groupBy(_.hotel.hotelName).view.mapValues(_.size)
-      counts.foreach(println)
+      // Print out analysis information
+      println("=============== Hotel Booking Analysis ====================\n")
+
+      // Get country has the highest number of booking
+      val countryHighestNumberOfBooking = analysis.getCountryHighestNumberOfBooking
+      analysis.showAnalysis(s"1. Country has the highest number of booking\nCountry: ${
+        countryHighestNumberOfBooking._1
+      }\nNumber of booking: ${
+        countryHighestNumberOfBooking._2
+      }\n")
+
+      println("===========================================================")
     end if
