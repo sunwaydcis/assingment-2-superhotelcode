@@ -3,7 +3,10 @@ import scala.collection.mutable.ListBuffer
 // Use parametric to reuse for multiple classes (future purposes), not only hotel booking analysis
 trait IAnalysis[T]:
   def getList: List[T]
+  // Show analysis information
   def showAnalysis(content: String): Unit
+  // Able to count the highest number for any key
+  def countHighestNumberPerKey(key: T => String): (String, Int)
 
 class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
   private val analysisDataList: ListBuffer[Booking] = new ListBuffer()
@@ -37,13 +40,17 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
   override def getList: List[Booking] =
     analysisDataList.toList
 
+  // Show analysis information
+  override def showAnalysis(content: String): Unit =
+    println(content)
+
   // Get country has the highest number of booking
   // String: country name, Int: number of booking
-  def getCountryHighestNumberOfBooking: (String, Int) =
+  override def countHighestNumberPerKey(key: Booking => String): (String, Int) =
     val dataList: List[Booking] = getList
 
     // Group by destination country and count number of booking on each country
-    val numberOfBookingPerCountryList = dataList.groupBy(_.destinationCountry)
+    val numberOfBookingPerCountryList = dataList.groupBy(key)
       // Count number of booking on each country
       .view.mapValues(_.size)
       // Sort descending
@@ -51,7 +58,3 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
 
     // Get first record
     numberOfBookingPerCountryList.head
-
-  // Show analysis information
-  override def showAnalysis(content: String): Unit =
-    println(content)

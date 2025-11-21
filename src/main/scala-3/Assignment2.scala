@@ -23,7 +23,7 @@ object Assignment2:
       println("=============== Hotel Booking Analysis ====================\n")
 
       // Get country has the highest number of booking
-      val countryHighestNumberOfBooking = analysis.getCountryHighestNumberOfBooking
+      val countryHighestNumberOfBooking = analysis.countHighestNumberPerKey(_.destinationCountry)
       analysis.showAnalysis(s"1. Country has the highest number of booking\nCountry: ${
         countryHighestNumberOfBooking._1
       }\nNumber of booking: ${
