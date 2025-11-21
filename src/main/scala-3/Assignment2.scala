@@ -30,5 +30,10 @@ object Assignment2:
         countryHighestNumberOfBooking._2
       }\n")
 
+      // Get hotel which offers the most economical option for Booking Price, Discount, Profit Margin
+
+
+      // Get most profitable hotel when considering the number of visitor and profit margin
+
       println("===========================================================")
     end if
