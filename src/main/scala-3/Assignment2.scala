@@ -23,7 +23,7 @@ object Assignment2:
       println("=============== Hotel Booking Analysis ====================\n")
 
       // Get country has the highest number of booking
-      val countryHighestNumberOfBooking = analysis.getCountryHighestNumberOfBooking
+      val countryHighestNumberOfBooking = analysis.countHighestNumberPerKey(_.destinationCountry)
       analysis.showAnalysis(s"1. Country has the highest number of booking\nCountry: ${
         countryHighestNumberOfBooking._1
       }\nNumber of booking: ${
@@ -31,9 +31,16 @@ object Assignment2:
       }\n")
 
       // Get hotel which offers the most economical option for Booking Price, Discount, Profit Margin
+      val (cheap, discount, profit) = analysis.getMostEconomicalHotels
+      analysis.showAnalysis(
+        s"""2. Most Economical Hotels
+           |Cheapest Hotel (Lowest Price): $cheap
+           |Best Discount Hotel: $discount
+           |Lowest Profit Margin Hotel: $profit
+           |""".stripMargin
+      )
 
-
-      // Get most profitable hotel when considering the number of visitor and profit margin
+    // Get most profitable hotel when considering the number of visitor and profit margin
 
       println("===========================================================")
     end if
