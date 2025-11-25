@@ -1,12 +1,20 @@
 import scala.collection.mutable.ListBuffer
 
+// Parent print class for every case such as
+// highest booking country, economist hotel, and profitable hotel
+trait IPrintAnalysis
+
 // Use parametric to reuse for multiple classes (future purposes), not only hotel booking analysis
 trait IAnalysis[T]:
   def getList: List[T]
-  // Show analysis information
-  def showAnalysis(content: String): Unit
   // Able to count the highest number for any key
   def countHighestNumberPerKey(key: T => String): (String, Int)
+  // Show analysis information
+  def showAnalysis(content: IPrintAnalysis): Unit
+
+// Used for showing analysis information on each case
+case class HighestBookingCountry(name: String, value: Int) extends IPrintAnalysis
+case class EconomistHotel(name: String, value: Float) extends IPrintAnalysis
 
 class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
   private val analysisDataList: ListBuffer[Booking] = new ListBuffer()
@@ -41,8 +49,8 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
     analysisDataList.toList
 
   // Show analysis information
-  override def showAnalysis(content: String): Unit =
-    println(content)
+//  override def showAnalysis(content: String): Unit =
+//    println(content)
 
   // Get country has the highest number of booking
   // String: country name, Int: number of booking
@@ -59,17 +67,19 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
     // Get first record
     numberOfBookingPerCountryList.head
 
-    //Finding the most economical hotel based on the 3 criteria
-  def getMostEconomicalHotels: (String, Float) =
+  def getHighestBookingCountry(key: Booking => String): HighestBookingCountry =
+    val (country, numberOfBooking) = countHighestNumberPerKey(key)
+
+    HighestBookingCountry(country, numberOfBooking)
+
+  // Finding the most economical hotel based on the 3 criteria
+  // Booking Price, Discount, Profit Margin
+  def getMostEconomicalHotel: EconomistHotel =
     val dataList: List[Booking] = getList
 
-    // Step 1: Prepare data by mapping to (Hotel Name, profitScore).
-    // The score is calculated inside the Booking object.
-    val scoredData = dataList.map(b => (b.hotel.hotelName, b.profitScore))
-
-    // Step 2: Use groupMapReduce for highly efficient aggregation
-    val avgProfitScorePerHotel = dataList.groupMapReduce(_.hotel.hotelName)( // Key: Hotel Name
-      // Map: (Profit Score, 1)
+    // Step 1: Use groupMapReduce for highly efficient aggregation
+    val avgProfitScorePerHotel = dataList.groupMapReduce(_.hotel.hotelName)(
+      // Map: (Profit Score, 1: used for counting record)
       b => (b.profitScore, 1)
     )(
       // Reduce: Sum (Profit Score) and Sum (Count)
@@ -78,8 +88,26 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
       // Final calculation: Average profitScore = Total Score / Total Count
       case (totalScore, count) => totalScore / count.toFloat
 
-    // Step 3: Sort ascending (lowest profitScore = most economical) and get the winner
+    // Step 2: Sort ascending (lowest profitScore = most economical)
+    // and get the economist hotel
     val sortedList = avgProfitScorePerHotel.toList.sortBy(_._2)
+    // Return the most economist hotel (Hotel Name, Avg Profit Score)
+    val (hotelName, avgProfitScore) = sortedList.head
 
-    // Return the winner (Hotel Name, Avg Profit Score)
-    sortedList.head
+    EconomistHotel(hotelName, avgProfitScore)
+
+  override def showAnalysis(content: IPrintAnalysis): Unit =
+    content match {
+      case HighestBookingCountry(name, value) =>
+        println(
+          s"""1. Country has the highest number of booking
+            |Country: $name
+            |Number of booking: $value
+            |""".stripMargin)
+      case EconomistHotel(name, value) =>
+        println(
+          s"""2. Most economical hotel (lowest average profit score)
+            |Most economist hotel: $name
+            |Average profit score: $value SGD
+            |""".stripMargin)
+    }
