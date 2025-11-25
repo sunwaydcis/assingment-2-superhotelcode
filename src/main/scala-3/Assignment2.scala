@@ -27,7 +27,7 @@ object Assignment2:
 
       // Get hotel which offers the most economical options
       // for Booking Price, Discount, Profit Margin
-      analysis.showAnalysis(analysis.getMostEconomicalHotel)
+      analysis.showAnalysis(analysis.getMostEconomistHotel)
       
       // Get most profitable hotel when considering the number of visitor and profit margin
 

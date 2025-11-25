@@ -74,7 +74,7 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
 
   // Finding the most economical hotel based on the 3 criteria
   // Booking Price, Discount, Profit Margin
-  def getMostEconomicalHotel: EconomistHotel =
+  def getMostEconomistHotel: EconomistHotel =
     val dataList: List[Booking] = getList
 
     // Step 1: Use groupMapReduce for highly efficient aggregation
