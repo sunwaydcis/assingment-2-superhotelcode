@@ -59,28 +59,35 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
     // Get first record
     numberOfBookingPerCountryList.head
 
-  def getMostEconomicalHotels: (String, String, String) =
-    val data = getList
+  def getMostEconomicalHotels: (String, Float) =
+    val dataList: List[Booking] = getList
 
-    // Group by hotel name
-    val grouped = data.groupBy(_.hotel.hotelName)
+    // Calculate the final 'profitScore' for each booking
+    val scoredData = dataList.map(b => {
+      // Calculate discountedPrice = Booking Price * (1 - discount)
+      val discountDecimal = b.discount / 100.0f
+      val discountedPrice = b.bookingPrice * (1.0f - discountDecimal)
 
-    // Hotel with the lowest average booking price
-    val cheapestHotel =
-      grouped.minBy { case (_, bookings) =>
-        bookings.map(_.bookingPrice).sum / bookings.size.toFloat
-      }._1
+      // Calculate profitScore = discountedPrice * profitMargin
+      val profitScore = discountedPrice * b.profitMargin
 
-    // Hotel with the highest average discount
-    val bestDiscountHotel =
-      grouped.maxBy { case (_, bookings) =>
-        bookings.map(_.discount).sum / bookings.size.toFloat
-      }._1
+      // Return the hotel name and the calculated profit score
+      (b.hotel.hotelName, profitScore)
+    })
 
-    // Hotel with the lowest average profit margin
-    val lowestProfitMarginHotel =
-      grouped.minBy { case (_, bookings) =>
-        bookings.map(_.profitMargin).sum / bookings.size.toFloat
-      }._1
+    // Use groupMapReduce for efficient aggregation
+    val avgProfitScorePerHotel = scoredData.groupMapReduce(_._1)( // Key: Hotel Name
+      // Map: (Profit Score, 1)
+      b => (b._2, 1)
+    )(
+      // Reduce: Sum (Profit Score) and Sum (Count)
+      (total, next) => (total._1 + next._1, total._2 + next._2)
+    ).view.mapValues:
+      // Final calculation: Average profitScore = Total Score / Total Count
+      case (totalScore, count) => totalScore / count.toFloat
 
-    (cheapestHotel, bestDiscountHotel, lowestProfitMarginHotel)
+    // Sort ascending (lowest profitScore = most economical) and get the winner
+    val sortedList = avgProfitScorePerHotel.toList.sortBy(_._2)
+
+    // Return the winner (Hotel Name, Avg Profit Score)
+    sortedList.head

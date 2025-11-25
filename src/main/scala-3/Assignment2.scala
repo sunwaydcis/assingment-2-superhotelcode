@@ -31,15 +31,15 @@ object Assignment2:
       }\n")
 
       // Get hotel which offers the most economical option for Booking Price, Discount, Profit Margin
-      val (cheap, discount, profit) = analysis.getMostEconomicalHotels
+      val (winnerHotel, avgProfitScore) = analysis.getMostEconomicalHotels
+
       analysis.showAnalysis(
-        s"""2. Most Economical Hotels
-           |Cheapest Hotel (Lowest Price): $cheap
-           |Best Discount Hotel: $discount
-           |Lowest Profit Margin Hotel: $profit
+        s"""2. Most Economical Hotel (Lowest Average Absolute Profit Score)
+           
+           |Winner Hotel: $winnerHotel
+           |Average Profit Score: ${avgProfitScore} SGD
            |""".stripMargin
       )
-
     // Get most profitable hotel when considering the number of visitor and profit margin
 
       println("===========================================================")
