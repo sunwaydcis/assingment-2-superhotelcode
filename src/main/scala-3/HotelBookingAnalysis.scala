@@ -48,10 +48,6 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
   override def getList: List[Booking] =
     analysisDataList.toList
 
-  // Show analysis information
-//  override def showAnalysis(content: String): Unit =
-//    println(content)
-
   // Get country has the highest number of booking
   // String: country name, Int: number of booking
   override def countHighestNumberPerKey(key: Booking => String): (String, Int) =
