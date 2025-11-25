@@ -68,9 +68,9 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
     val scoredData = dataList.map(b => (b.hotel.hotelName, b.profitScore))
 
     // Step 2: Use groupMapReduce for highly efficient aggregation
-    val avgProfitScorePerHotel = scoredData.groupMapReduce(_._1)( // Key: Hotel Name
+    val avgProfitScorePerHotel = dataList.groupMapReduce(_.hotel.hotelName)( // Key: Hotel Name
       // Map: (Profit Score, 1)
-      b => (b._2, 1)
+      b => (b.profitScore, 1)
     )(
       // Reduce: Sum (Profit Score) and Sum (Count)
       (total, next) => (total._1 + next._1, total._2 + next._2)
