@@ -34,6 +34,13 @@ object Assignment2:
 
 
       // Get most profitable hotel when considering the number of visitor and profit margin
-
+      val mostProfitableHotel = analysis.getMostProfitbleHotel
+      analysis.showAnalysis(s"3. Most profitable Hotel when considering the number of visitor and profit margin\nHotel: ${
+        mostProfitableHotel._1
+      }\nTotal Visitors: ${
+        mostProfitableHotel._2
+      }\nTotal Estimated Profit: ${
+        mostProfitableHotel._3
+      }\n ")
       println("===========================================================")
     end if

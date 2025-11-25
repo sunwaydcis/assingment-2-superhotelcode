@@ -55,3 +55,33 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
   // Show analysis information
   override def showAnalysis(content: String): Unit =
     println(content)
+
+  //Q3 Logic
+  // Get most profitable hotel when considering the number of visitors and profit margin
+  // String: hotel name, Int: total number of visitors, Float: total profits
+  def getMostProfitableHotel: (String, Int, Float) =
+    val dataList: List[Booking] = getList
+    
+    //Group all by hotel name
+    val hotelProfitandVisitorData = dataList
+      .groupBy(_.hotel.name)
+      .map { case (hotelName, bookings) =>
+
+        //Calculate Total Profit and Total Visitor for this hotel
+        val totalProfit = bookings.map { b =>
+          //using profitScore and multiple with visitor count to get the 
+          b.profitScore * b.noOfPeople
+        }.sum
+
+        val totalVisitors = bookings.map(_.noOfPeople).sum
+
+        //Return a tuple of the Hotel Name, Total Visitors, Total Profit
+        (hotelName, totalVisitors, totalProfit)
+      }
+    
+    hotelProfitandVisitorData.maxBy(_._3)
+    
+    
+        
+    
+    
