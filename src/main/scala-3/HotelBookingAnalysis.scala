@@ -38,7 +38,8 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
         Payment(PaymentMode(data(18)), data(19)),
         data(20).toFloat,
         // Remove percentage sign from value
-        data(21).replace("%", "").toFloat,
+        // Convert percentage to decimal
+        data(21).replace("%", "").toFloat / 100,
         data(22).toFloat,
         data(23).toFloat
       )
@@ -103,7 +104,7 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
       case EconomistHotel(name, value) =>
         println(
           s"""2. Most economical hotel (lowest average profit score)
-            |Most economist hotel: $name
+            |Hotel: $name
             |Average profit score: $value SGD
             |""".stripMargin)
     }
