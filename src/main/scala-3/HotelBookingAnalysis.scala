@@ -59,23 +59,15 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
     // Get first record
     numberOfBookingPerCountryList.head
 
+    //Finding the most economical hotel based on the 3 criteria
   def getMostEconomicalHotels: (String, Float) =
     val dataList: List[Booking] = getList
 
-    // Calculate the final 'profitScore' for each booking
-    val scoredData = dataList.map(b => {
-      // Calculate discountedPrice = Booking Price * (1 - discount)
-      val discountDecimal = b.discount / 100.0f
-      val discountedPrice = b.bookingPrice * (1.0f - discountDecimal)
+    // Step 1: Prepare data by mapping to (Hotel Name, profitScore).
+    // The score is calculated inside the Booking object.
+    val scoredData = dataList.map(b => (b.hotel.hotelName, b.profitScore))
 
-      // Calculate profitScore = discountedPrice * profitMargin
-      val profitScore = discountedPrice * b.profitMargin
-
-      // Return the hotel name and the calculated profit score
-      (b.hotel.hotelName, profitScore)
-    })
-
-    // Use groupMapReduce for efficient aggregation
+    // Step 2: Use groupMapReduce for highly efficient aggregation
     val avgProfitScorePerHotel = scoredData.groupMapReduce(_._1)( // Key: Hotel Name
       // Map: (Profit Score, 1)
       b => (b._2, 1)
@@ -86,7 +78,7 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
       // Final calculation: Average profitScore = Total Score / Total Count
       case (totalScore, count) => totalScore / count.toFloat
 
-    // Sort ascending (lowest profitScore = most economical) and get the winner
+    // Step 3: Sort ascending (lowest profitScore = most economical) and get the winner
     val sortedList = avgProfitScorePerHotel.toList.sortBy(_._2)
 
     // Return the winner (Hotel Name, Avg Profit Score)
