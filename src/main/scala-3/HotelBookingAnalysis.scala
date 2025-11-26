@@ -10,6 +10,11 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
 
   override def parseCsvData(dataList: LazyList[List[String]]): Unit =
     dataList.foreach(data => {
+
+      if (data(16) == "Simply Charmed B&B") {
+        println(s"DEBUG: Raw Price: ${data(20)}, Raw Discount: ${data(21)}, Raw Profit Margin: ${data(23)}")
+      }
+
       analysisDataList += new Booking(
         data.head,
         DateUtil.parseDate(data(1)),
@@ -61,7 +66,7 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
   // String: hotel name, Int: total number of visitors, Float: total profits
   def getMostProfitableHotel: (String, Int, Float) =
     val dataList: List[Booking] = getList
-    
+
     //Group all by hotel name
     val hotelProfitandVisitorData = dataList
       .groupBy(_.hotel.hotelName)
@@ -69,19 +74,18 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
 
         //Calculate Total Profit and Total Visitor for this hotel
         val totalProfit = bookings.map { b =>
-          //using profitScore and multiple with visitor count to get the 
-          b.profitScore * b.noOfPeople
-        }.sum
+          //using profitScore and multiple with visitor count to get the
+          (b.profitScore * b.noOfPeople).toDouble
+        }.sum.toFloat
 
         val totalVisitors = bookings.map(_.noOfPeople).sum
 
         //Return a tuple of the Hotel Name, Total Visitors, Total Profit
         (hotelName, totalVisitors, totalProfit)
       }
-    
+
     hotelProfitandVisitorData.maxBy(_._3)
-    
-    
-        
-    
-    
+
+
+
+
