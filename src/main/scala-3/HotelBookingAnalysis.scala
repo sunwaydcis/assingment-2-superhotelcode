@@ -64,8 +64,8 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
     // Get first record
     numberOfBookingPerCountryList.head
 
-  def getHighestBookingCountry(key: Booking => String): HighestBookingCountry =
-    val (country, numberOfBooking) = countHighestNumberPerKey(key)
+  def getHighestBookingCountry: HighestBookingCountry =
+    val (country, numberOfBooking) = countHighestNumberPerKey(_.destinationCountry)
 
     HighestBookingCountry(country, numberOfBooking)
 
@@ -79,7 +79,7 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
       // Map: (Profit Score, 1: used for counting record)
       b => (b.profitScore, 1)
     )(
-      // Reduce: Sum (Profit Score) and Sum (Count)
+      // Reduce: Sum (Profit Score) and Count booking per hotel
       (total, next) => (total._1 + next._1, total._2 + next._2)
     ).view.mapValues:
       // Final calculation: Average profitScore = Total Score / Total Count

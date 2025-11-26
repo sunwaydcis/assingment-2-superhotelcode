@@ -23,12 +23,12 @@ object Assignment2:
       println("=============== Hotel Booking Analysis ====================\n")
 
       // Get country has the highest number of booking
-      analysis.showAnalysis(analysis.getHighestBookingCountry(_.destinationCountry))
+      analysis.showAnalysis(analysis.getHighestBookingCountry)
 
       // Get hotel which offers the most economical options
       // for Booking Price, Discount, Profit Margin
       analysis.showAnalysis(analysis.getMostEconomistHotel)
-      
+
       // Get most profitable hotel when considering the number of visitor and profit margin
 
       println("===========================================================")

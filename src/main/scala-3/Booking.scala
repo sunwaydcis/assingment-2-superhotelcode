@@ -20,6 +20,7 @@ class Booking(
              val profitMargin: Float
              ):
   // Used for calculating profit score
+  // discount = 0 - 1 (e.g. 0.25)
   private def discountedPrice: Float = bookingPrice * (1 - discount)
   // Used for evaluating cost-effective
   // Lowest value -> cost-effective for customers
