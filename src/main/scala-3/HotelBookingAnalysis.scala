@@ -64,7 +64,7 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
     
     //Group all by hotel name
     val hotelProfitandVisitorData = dataList
-      .groupBy(_.hotel.name)
+      .groupBy(_.hotel.hotelName)
       .map { case (hotelName, bookings) =>
 
         //Calculate Total Profit and Total Visitor for this hotel
