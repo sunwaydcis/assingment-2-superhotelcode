@@ -70,15 +70,17 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
       .map { case (hotelName, bookings) =>
 
         //Calculate Total Profit and Total Visitor for this hotel
-        val totalProfit = bookings.map { b =>
+        val totalProfitRaw = bookings.map { b =>
           //using profitScore and multiple with visitor count to get the
           (b.profitScore * b.noOfPeople).toDouble
-        }.sum.toFloat
+        }.sum
+          
+        val totalProfitRounded: Float = (math.round(totalProfitRaw * 100.0)/ 100.0).toFloat
 
         val totalVisitors = bookings.map(_.noOfPeople).sum
 
         //Return a tuple of the Hotel Name, Total Visitors, Total Profit
-        (hotelName, totalVisitors, totalProfit)
+        (hotelName, totalVisitors, totalProfitRounded)
       }
 
     hotelProfitandVisitorData.maxBy(_._3)

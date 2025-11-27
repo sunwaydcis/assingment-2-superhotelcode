@@ -39,7 +39,7 @@ object Assignment2:
         mostProfitableHotel._1
       }\nTotal Visitors: ${
         mostProfitableHotel._2
-      }\nTotal Estimated Profit: ${
+      }\nTotal Estimated Profit (in Sgd): ${
         mostProfitableHotel._3
       }\n ")
       println("===========================================================")
