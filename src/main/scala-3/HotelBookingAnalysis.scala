@@ -11,9 +11,7 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
   override def parseCsvData(dataList: LazyList[List[String]]): Unit =
     dataList.foreach(data => {
 
-      if (data(16) == "Simply Charmed B&B") {
-        println(s"DEBUG: Raw Price: ${data(20)}, Raw Discount: ${data(21)}, Raw Profit Margin: ${data(23)}")
-      }
+      val discountRatio = data(21).replace("%", "").toFloat / 100.0f
 
       analysisDataList += new Booking(
         data.head,
@@ -31,8 +29,7 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
         Hotel(data(16), data(17).toFloat),
         Payment(PaymentMode(data(18)), data(19)),
         data(20).toFloat,
-        // Remove percentage sign from value
-        data(21).replace("%", "").toFloat,
+        discountRatio,
         data(22).toFloat,
         data(23).toFloat
       )
@@ -85,7 +82,5 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
       }
 
     hotelProfitandVisitorData.maxBy(_._3)
-
-
-
+      
 
