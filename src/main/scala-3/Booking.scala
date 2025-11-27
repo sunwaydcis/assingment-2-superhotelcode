@@ -23,5 +23,12 @@ class Booking(
   private def discountedPrice: Float = bookingPrice * (1 - discount)
   // Used for evaluating cost-effective
   // Lowest value -> cost-effective for customers
+  //1. Spending per visitor
+  def pricePerVisitor: Float = discountedPrice / noOfPeople
+  //2. ProfitScore per visitor
+  def profitScorePerVisitor: Float = pricePerVisitor * profitMargin
+  //3. Total Profit score the booking (Similar to profitScore)
+  def totalProfitScore: Float = profitScorePerVisitor * noOfPeople
+  
   // Highest score -> benefits for hotel side
   def profitScore: Float = discountedPrice * profitMargin

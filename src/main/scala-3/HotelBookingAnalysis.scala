@@ -65,24 +65,27 @@ class HotelBookingAnalysis extends CsvUtil, IAnalysis[Booking]:
     val dataList: List[Booking] = getList
 
     //Group all by hotel name
-    val hotelProfitandVisitorData = dataList
-      .groupBy(_.hotel.hotelName)
-      .map { case (hotelName, bookings) =>
+    val hotelProfitData = dataList
 
-        //Calculate Total Profit and Total Visitor for this hotel
-        val totalProfitRaw = bookings.map { b =>
-          //using profitScore and multiple with visitor count to get the
-          (b.profitScore * b.noOfPeople).toDouble
-        }.sum
-          
-        val totalProfitRounded: Float = (math.round(totalProfitRaw * 100.0)/ 100.0).toFloat
+      //Using groupMapReduce for single pass aggregation
+      .groupMapReduce(
+        //grouping by hotel name
+        _.hotel.hotelName
+      )(
+        b => (b.noOfPeople.toLong, b.totalProfitScore.toDouble)
+      )(
+        // Sum all the values for
+        (a, b) =>(a._1 + b._1, a._2 + b._2)
+      )
 
-        val totalVisitors = bookings.map(_.noOfPeople).sum
+      .toList.map { case (name, (visitors, totalProfitDouble)) =>
+
+      val totalProfitRounded: Float = (math.round(totalProfitDouble * 100.0)/ 100.0).toFloat
 
         //Return a tuple of the Hotel Name, Total Visitors, Total Profit
-        (hotelName, totalVisitors, totalProfitRounded)
+        (name, visitors.toInt, totalProfitRounded)
       }
 
-    hotelProfitandVisitorData.maxBy(_._3)
+    hotelProfitData.maxByOption(_._3).getOrElse(("", 0 , 0.0f))
       
 
