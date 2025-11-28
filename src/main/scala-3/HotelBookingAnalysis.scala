@@ -1,3 +1,12 @@
+
+// All utilities, such as formating value
+trait IUtility:
+  def formatFloatValue(value: Float, delimiter: Int = 3): Float =
+    var d = 1
+    for (i <- 1 to delimiter) { d *= 10 }
+    // e.g. delimiter = 2 -> 123.23, 3 -> 123.235
+    Math.round(value * d) / d.toFloat
+
 // Parent print class for every case such as
 // highest booking country, economist hotel, and profitable hotel
 trait IPrintAnalysis
@@ -12,14 +21,16 @@ trait IAnalysis[T]:
 // Used for showing analysis information on each case
 case class HighestBookingCountry(name: String, value: Int) extends IPrintAnalysis
 case class EconomistHotel(name: String, value: Float) extends IPrintAnalysis
+case class ProfitableHotel(name: String, numberOfVisitors: Int, profit: Float) extends IPrintAnalysis
 
-class HotelBookingAnalysis extends CsvUtil[Booking], IAnalysis[Booking]:
+class HotelBookingAnalysis extends CsvUtil[Booking], IAnalysis[Booking], IUtility:
   private var analysisDataList: List[Booking] = List.empty
 
   override def readCsv(filename: String): List[Booking] =
     val dataList = super.readCsv(filename)
     analysisDataList = dataList
 
+    // Assign local var to proceed with aggregation
     analysisDataList
 
   override def parseCsvData(data: List[String]): Booking =
@@ -59,6 +70,30 @@ class HotelBookingAnalysis extends CsvUtil[Booking], IAnalysis[Booking]:
     // Get first record
     numberOfBookingPerCountryList.head
 
+  // Get most profitable hotel when considering the number of visitors and profit margin
+  // String: hotel name, Int: total number of visitors, Float: total profits
+  def getMostProfitableHotel: ProfitableHotel =
+    // Using groupMapReduce for single pass aggregation
+    val profitableHotel = analysisDataList.groupMapReduce(
+      // Grouping by hotel name
+      _.hotel.hotelName
+    )(
+      // Map number of visitors and total profit on each hotel
+      b => (b.noOfPeople, b.totalProfitScore)
+    )(
+      // Sum total number of visitors and total profit
+      (total, next) =>(total._1 + next._1, total._2 + next._2)
+    )
+    // Convert result into one object. e.g. ("hotel 1", 12, 312.55)
+    .map(b => (b._1, b._2._1, b._2._2))
+    // Sort total profit descending
+    // Highest: profitable hotel
+    .toList.sortBy(_._2).reverse
+
+    val (name, numberOfVisitors, profit) = profitableHotel.head
+
+    ProfitableHotel(name, numberOfVisitors, profit)
+
   def getHighestBookingCountry: HighestBookingCountry =
     val (country, numberOfBooking) = countHighestNumberPerKey(_.destinationCountry)
 
@@ -97,6 +132,13 @@ class HotelBookingAnalysis extends CsvUtil[Booking], IAnalysis[Booking]:
         println(
           s"""2. Most economical hotel (lowest average profit score)
             |Hotel: $name
-            |Average profit score: $value SGD
+            |Average profit score (SGD): ${formatFloatValue(value)}
             |""".stripMargin)
+      case ProfitableHotel(name, numberOfVisitors, profit) =>
+        println(
+          s"""3. Most profitable Hotel when considering the number of visitor and profit margin
+             |Hotel: $name
+             |Total Visitors: $numberOfVisitors
+             |Total Profit (SGD): ${formatFloatValue(profit)}
+             |""".stripMargin)
     }

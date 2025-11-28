@@ -26,3 +26,10 @@ class Booking(
   // Lowest value -> cost-effective for customers
   // Highest score -> benefits for hotel side
   def profitScore: Float = discountedPrice * profitMargin
+  
+  // Spending per visitor
+  private def pricePerVisitor: Float = discountedPrice / noOfPeople
+  // ProfitScore per visitor
+  private def profitScorePerVisitor: Float = pricePerVisitor * profitMargin
+  // Total Profit score the booking (Similar to profitScore)
+  def totalProfitScore: Float = profitScorePerVisitor * noOfPeople

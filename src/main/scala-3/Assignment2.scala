@@ -24,6 +24,7 @@ object Assignment2:
       analysis.showAnalysis(analysis.getMostEconomistHotel)
 
       // Get most profitable hotel when considering the number of visitor and profit margin
-
+      analysis.showAnalysis(analysis.getMostProfitableHotel)
+      
       println("===========================================================")
     end if
