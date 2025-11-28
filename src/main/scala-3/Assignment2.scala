@@ -5,7 +5,7 @@ object Assignment2:
 
     // Read csv and load data
     val FILE_NAME = "Hotel_Dataset.csv"
-    val dataList: LazyList[List[String]] = analysis.readCsv(
+    val dataList: List[Booking] = analysis.readCsv(
       getClass.getResource("/data/" + FILE_NAME).getPath
     )
 
@@ -13,12 +13,6 @@ object Assignment2:
     if dataList.isEmpty then
       println("No data for analysis")
     else
-      // Parse and converting data to a specific class
-      analysis.parseCsvData(dataList)
-
-      // Close stream after transforming data
-      analysis.closeStream()
-
       // Print out analysis information
       println("=============== Hotel Booking Analysis ====================\n")
 
