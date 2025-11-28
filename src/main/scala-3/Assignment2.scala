@@ -5,7 +5,7 @@ object Assignment2:
 
     // Read csv and load data
     val FILE_NAME = "Hotel_Dataset.csv"
-    val dataList: LazyList[List[String]] = analysis.readCsv(
+    val dataList: List[Booking] = analysis.readCsv(
       getClass.getResource("/data/" + FILE_NAME).getPath
     )
 
@@ -13,34 +13,18 @@ object Assignment2:
     if dataList.isEmpty then
       println("No data for analysis")
     else
-      // Parse and converting data to a specific class
-      analysis.parseCsvData(dataList)
-
-      // Close stream after transforming data
-      analysis.closeStream()
-
       // Print out analysis information
       println("=============== Hotel Booking Analysis ====================\n")
 
       // Get country has the highest number of booking
-      val countryHighestNumberOfBooking = analysis.getCountryHighestNumberOfBooking
-      analysis.showAnalysis(s"1. Country has the highest number of booking\nCountry: ${
-        countryHighestNumberOfBooking._1
-      }\nNumber of booking: ${
-        countryHighestNumberOfBooking._2
-      }\n")
+      analysis.showAnalysis(analysis.getHighestBookingCountry)
 
-      // Get hotel which offers the most economical option for Booking Price, Discount, Profit Margin
-
+      // Get hotel which offers the most economical options
+      // for Booking Price, Discount, Profit Margin
+      analysis.showAnalysis(analysis.getMostEconomistHotel)
 
       // Get most profitable hotel when considering the number of visitor and profit margin
-      val mostProfitableHotel = analysis.getMostProfitableHotel
-      analysis.showAnalysis(s"3. Most profitable Hotel when considering the number of visitor and profit margin\nHotel: ${
-        mostProfitableHotel._1
-      }\nTotal Visitors: ${
-        mostProfitableHotel._2
-      }\nTotal Estimated Profit (in Sgd): ${
-        mostProfitableHotel._3
-      }\n ")
+      analysis.showAnalysis(analysis.getMostProfitableHotel)
+      
       println("===========================================================")
     end if
