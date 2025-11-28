@@ -1,12 +1,3 @@
-
-// All utilities, such as formating value
-trait IUtility:
-  def formatFloatValue(value: Float, delimiter: Int = 3): Float =
-    var d = 1
-    for (i <- 1 to delimiter) { d *= 10 }
-    // e.g. delimiter = 2 -> 123.23, 3 -> 123.235
-    Math.round(value * d) / d.toFloat
-
 // Parent print class for every case such as
 // highest booking country, economist hotel, and profitable hotel
 trait IPrintAnalysis
@@ -23,7 +14,7 @@ case class HighestBookingCountry(name: String, value: Int) extends IPrintAnalysi
 case class EconomistHotel(name: String, value: Float) extends IPrintAnalysis
 case class ProfitableHotel(name: String, numberOfVisitors: Int, profit: Float) extends IPrintAnalysis
 
-class HotelBookingAnalysis extends CsvUtil[Booking], IAnalysis[Booking], IUtility:
+class HotelBookingAnalysis extends CsvUtil[Booking], IAnalysis[Booking]:
   private var analysisDataList: List[Booking] = List.empty
 
   override def readCsv(filename: String): List[Booking] =
@@ -132,13 +123,13 @@ class HotelBookingAnalysis extends CsvUtil[Booking], IAnalysis[Booking], IUtilit
         println(
           s"""2. Most economical hotel (lowest average profit score)
             |Hotel: $name
-            |Average profit score (SGD): ${formatFloatValue(value)}
+            |Average profit score (SGD): ${NumberUtil.formatFloatValue(value)}
             |""".stripMargin)
       case ProfitableHotel(name, numberOfVisitors, profit) =>
         println(
           s"""3. Most profitable Hotel when considering the number of visitor and profit margin
              |Hotel: $name
              |Total visitors: $numberOfVisitors
-             |Total profit (SGD): ${formatFloatValue(profit)}
+             |Total profit (SGD): ${NumberUtil.formatFloatValue(profit)}
              |""".stripMargin)
     }
