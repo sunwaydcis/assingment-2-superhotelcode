@@ -138,7 +138,7 @@ class HotelBookingAnalysis extends CsvUtil[Booking], IAnalysis[Booking], IUtilit
         println(
           s"""3. Most profitable Hotel when considering the number of visitor and profit margin
              |Hotel: $name
-             |Total Visitors: $numberOfVisitors
-             |Total Profit (SGD): ${formatFloatValue(profit)}
+             |Total visitors: $numberOfVisitors
+             |Total profit (SGD): ${formatFloatValue(profit)}
              |""".stripMargin)
     }
