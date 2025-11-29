@@ -76,10 +76,11 @@ class HotelBookingAnalysis extends CsvUtil[Booking], IAnalysis[Booking]:
       (total, next) =>(total._1 + next._1, total._2 + next._2)
     )
     // Convert result into one object. e.g. ("hotel 1", 12, 312.55)
+    // (Hotel name, number of visitors, total profit)
     .map(b => (b._1, b._2._1, b._2._2))
     // Sort total profit descending
     // Highest: profitable hotel
-    .toList.sortBy(_._2).reverse
+    .toList.sortBy(_._3).reverse
 
     val (name, numberOfVisitors, profit) = profitableHotel.head
 
