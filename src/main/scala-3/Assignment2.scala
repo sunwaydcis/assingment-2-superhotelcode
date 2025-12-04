@@ -1,3 +1,5 @@
+import scala.collection.View
+
 // Group assignment - Hotel Booking Analysis
 object Assignment2:
   def main(args: Array[String]): Unit =
@@ -16,15 +18,18 @@ object Assignment2:
       // Print out analysis information
       println("=============== Hotel Booking Analysis ====================\n")
 
+      // Avoid normalization on each feature (economist or profitable hotel)
+      val bookingScoreList: View[BookingScore] = analysis.getNormalizationData
+
       // Get country has the highest number of booking
       analysis.showAnalysis(analysis.getHighestBookingCountry)
 
       // Get hotel which offers the most economical options
       // for Booking Price, Discount, Profit Margin
-      analysis.showAnalysis(analysis.getMostEconomistHotel)
+      analysis.showAnalysis(analysis.getMostEconomistHotel(bookingScoreList))
 
       // Get most profitable hotel when considering the number of visitor and profit margin
-      analysis.showAnalysis(analysis.getMostProfitableHotel)
+      analysis.showAnalysis(analysis.getMostProfitableHotel(bookingScoreList))
       
       println("===========================================================")
     end if
