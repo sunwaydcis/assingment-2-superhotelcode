@@ -6,3 +6,6 @@ object NumberUtil:
     }
     // e.g. delimiter = 2 -> 123.23, 3 -> 123.235
     Math.round(value * d) / d.toFloat
+
+  def convertNumberToPercentage(value: Float): Float =
+    value * 100
