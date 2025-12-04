@@ -1,35 +1,21 @@
 import java.time.{LocalDate, LocalTime}
 
-class Booking(
-             val bookingId: String,
-             val bookingDate: LocalDate,
-             val bookingTime: LocalTime,
-             val customer: Customer,
-             val destinationCountry: String,
-             val destinationCity: String,
-             val noOfPeople: Int,
-             val checkInDate: LocalDate,
-             val noOfDays: Int,
-             val checkoutDate: LocalDate,
-             val room: Int,
-             val hotel: Hotel,
-             val payment: Payment,
-             val bookingPrice: Float,
-             val discount: Float,
-             val gst: Float,
-             val profitMargin: Float
-             ):
-  // Used for calculating profit score
-  // discount = 0 - 1 (e.g. 0.25)
-  private def discountedPrice: Float = bookingPrice * (1 - discount)
-  // Used for evaluating cost-effective
-  // Lowest value -> cost-effective for customers
-  // Highest score -> benefits for hotel side
-  def profitScore: Float = discountedPrice * profitMargin
-  
-  // Spending per visitor
-  private def pricePerVisitor: Float = discountedPrice / noOfPeople
-  // ProfitScore per visitor
-  private def profitScorePerVisitor: Float = pricePerVisitor * profitMargin
-  // Total Profit score the booking (Similar to profitScore)
-  def totalProfitScore: Float = profitScorePerVisitor * noOfPeople
+case class Booking(
+             bookingId: String,
+             bookingDate: LocalDate,
+             bookingTime: LocalTime,
+             customer: Customer,
+             destinationCountry: String,
+             destinationCity: String,
+             noOfPeople: Int,
+             checkInDate: LocalDate,
+             noOfDays: Int,
+             checkoutDate: LocalDate,
+             room: Int,
+             hotel: Hotel,
+             payment: Payment,
+             bookingPrice: Float,
+             discount: Float,
+             gst: Float,
+             profitMargin: Float
+             )
