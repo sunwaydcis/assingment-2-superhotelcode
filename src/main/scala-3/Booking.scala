@@ -17,5 +17,22 @@ case class Booking(
              bookingPrice: Float,
              discount: Float,
              gst: Float,
-             profitMargin: Float
-             )
+             profitMargin: Float)
+
+case class BookingForNormalization(
+            name: String,
+            city: String,
+            country: String,
+            price: Float,
+            discount: Float,
+            profitMargin: Float,
+            numberOfVisitors: Int)
+
+case class BookingScore(
+             name: String,
+             city: String,
+             country: String,
+             priceScore: Float,
+             discountScore: Float,
+             profitMarginScore: Float,
+             numberOfVisitorScore: Float)

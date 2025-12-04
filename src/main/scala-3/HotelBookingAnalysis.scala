@@ -1,3 +1,5 @@
+import scala.collection.View
+
 // Parent print class for every case such as
 // highest booking country, economist hotel, and profitable hotel
 trait IPrintAnalysis
@@ -7,51 +9,34 @@ trait IAnalysis[T]:
   // Show analysis information
   def showAnalysis(content: IPrintAnalysis): Unit
 
-  // Get min value by key, remove private if other features use it
-  private def getMinValueByKey(dataList: List[T], key: T => Float): Float =
-    dataList.map(key).min
-
-  // Get max value by key, remove private if other features use it
-  private def getMaxValueByKey(dataList: List[T], key: T => Float): Float =
-    dataList.map(key).max
-
-  // Calculate avg value, remove private if other features use it
-  private def calculateAvgValueByKey(dataList: List[T], key: T => Float): Float =
-    val dataLength = dataList.size
-    if dataLength == 0 then return 0.0
-
-    dataList.map(key).sum / dataLength
-
-  // Normalization based on min and max, remove private if other features use it
-  private def normalizeValueByMinMax(value: Float, min: Float, max: Float): Float =
+  // Normalization based on min and max
+  def normalizeValueByRange(value: Float, min: Float, max: Float): Float =
     // Avoid dividing by zero
     if min == max then return 0.0
     (value - min) / (max - min)
 
-  // Get normalization score by key
-  def getScoreByKey(dataList: List[T], key: T => Float): Float =
-    // Prepare min, max by key for normalization
-    val minValue: Float = getMinValueByKey(dataList, key)
-    val maxValue: Float = getMaxValueByKey(dataList, key)
-
-    // Calculate avg value by key
-    val avgValue: Float = calculateAvgValueByKey(dataList, key)
-
-    // Normalize value
-    normalizeValueByMinMax(avgValue, minValue, maxValue)
+// Used for storing min and max value for normalization
+// Int / Float
+case class NormalizationRange[T1](min: T1, max: T1)
 
 // Used for showing analysis information on each case
 case class HighestBookingCountry(name: String, numberOfBookings: Int) extends IPrintAnalysis
+
 case class EconomistHotel(
                             name: String,
+                            city: String,
+                            country: String,
                             avgScore: Float,
                             priceScore: Float,
                             discountScore: Float,
                             profitMarginScore: Float) extends IPrintAnalysis
+
 case class ProfitableHotel(
                             name: String,
+                            city: String,
+                            country: String,
                             avgScore: Float,
-                            numberOfVisitors: Int,
+                            numberOfVisitorScore: Float,
                             profitMarginScore: Float) extends IPrintAnalysis
 
 class HotelBookingAnalysis extends CsvUtil[Booking], IAnalysis[Booking]:
@@ -88,74 +73,147 @@ class HotelBookingAnalysis extends CsvUtil[Booking], IAnalysis[Booking]:
       data(23).toFloat
     )
 
-  // Get most profitable hotel when considering the number of visitors and profit margin
-  // String: hotel name, Int: total number of visitors, Float: total profits
-  def getMostProfitableHotel: ProfitableHotel =
-    val profitableHotel = analysisDataList.groupBy(_.hotel.hotelName).view.mapValues(bookings => {
-      // Normalization profit margin
-      val profitMarginScore: Float = getScoreByKey(bookings, _.profitMargin)
-
-      // Total number of visitors
-      val numberOfVisitors: Int = bookings.map(_.noOfPeople).sum
-
-      // Calculate avg score
-      val avgScore = (numberOfVisitors + profitMarginScore) / 2
-
-      (avgScore, numberOfVisitors, profitMarginScore)
-    })
-    // Convert result into one object
-    // (Hotel name, avg score, number of visitors, profit margin score)
-    .map(b => (b._1, b._2._1, b._2._2, b._2._3))
-    // Sort avg score descending -> most profitable for hotel
-    .toList.sortBy(_._2).reverse
-
-    val (name, avgScore, numberOfVisitors, profitMarginScore) = profitableHotel.head
-
-    ProfitableHotel(name, avgScore, numberOfVisitors, profitMarginScore)
-
   // Get country has the highest number of booking
-  // String: country name, Int: number of booking
   def getHighestBookingCountry: HighestBookingCountry =
     // Group by destination country and count number of booking on each country
     val numberOfBookingPerCountryList = analysisDataList
       // Group by a specific key such as destination_country and count on each value
       .groupMapReduce(_.destinationCountry)(_ => 1)(_ + _)
-      // Sort count value descending
-      .toList.sortBy(_._2).reverse
+      // Convert result into HighestBookingCountry
+      .map(b => HighestBookingCountry(b._1, b._2))
 
-    val (country, numberOfBooking) = numberOfBookingPerCountryList.head
+    // Get the highest number of bookings
+    numberOfBookingPerCountryList.maxBy(_.numberOfBookings)
 
-    HighestBookingCountry(country, numberOfBooking)
+  // Get normalization data for getting economist or profitable hotel
+  // No parse to list to reduce memory and enhance performance
+  def getNormalizationData: View[BookingScore] =
+    // Get avg value on each hotel (unique hotel: differs from country and city as well)
+    val bookingDataForNormalization = analysisDataList.groupBy(
+      b => (b.hotel.hotelName, b.destinationCity, b.destinationCountry)
+    ).view.mapValues(bookings => {
+      // Avoid loop many times when using map and sum on each field
+      // Use foreach loop one times
+      var sumPrice: Float = 0
+      var sumDiscount: Float = 0
+      var sumProfitMargin: Float = 0
+      var sumNumberOfVisitors: Int = 0
+      bookings.foreach(b => {
+        sumPrice += b.bookingPrice
+        sumDiscount += b.discount
+        sumProfitMargin += b.profitMargin
+        sumNumberOfVisitors += b.noOfPeople
+      })
+
+      // Calculate avg value
+      // Avoid getting length on each criterion
+      val dataLength: Int = bookings.size
+      val avgBookingPrice: Float = sumPrice / dataLength
+      val avgDiscount: Float = sumDiscount / dataLength
+      val avgProfitMargin: Float = sumProfitMargin / dataLength
+
+      (avgBookingPrice, avgDiscount, avgProfitMargin, sumNumberOfVisitors)
+    })
+    // name, city, country, price, discount, profitMargin, numberOfVisitors
+    .map(b => BookingForNormalization(
+      b._1._1,
+      b._1._2,
+      b._1._3,
+      b._2._1,
+      b._2._2,
+      b._2._3,
+      b._2._4
+    ))
+
+    // Prepare min / max for normalization on each criterion
+    // Use minBy / maxBy to avoid creating new collection if using map and min / max
+    val priceRange = NormalizationRange[Float](
+      bookingDataForNormalization.minBy(_.price).price,
+      bookingDataForNormalization.maxBy(_.price).price
+    )
+    val discountRange = NormalizationRange[Float](
+      bookingDataForNormalization.minBy(_.discount).discount,
+      bookingDataForNormalization.maxBy(_.discount).discount
+    )
+    val profitMarginRange = NormalizationRange[Float](
+      bookingDataForNormalization.minBy(_.profitMargin).profitMargin,
+      bookingDataForNormalization.maxBy(_.profitMargin).profitMargin
+    )
+    val numberOfVisitorRange = NormalizationRange[Int](
+      bookingDataForNormalization.minBy(_.numberOfVisitors).numberOfVisitors,
+      bookingDataForNormalization.maxBy(_.numberOfVisitors).numberOfVisitors
+    )
+
+    // Normalization on each criterion
+    bookingDataForNormalization.map(b => {
+      val priceScore = normalizeValueByRange(b.price, priceRange.min, priceRange.max)
+      val discountScore = normalizeValueByRange(b.discount, discountRange.min, discountRange.max)
+      val profitMarginScore = normalizeValueByRange(
+        b.profitMargin,
+        profitMarginRange.min,
+        profitMarginRange.max
+      )
+      val numberOfVisitorScore = normalizeValueByRange(
+        b.numberOfVisitors,
+        numberOfVisitorRange.min,
+        numberOfVisitorRange.max
+      )
+
+      BookingScore(
+        b.name,
+        b.city,
+        b.country,
+        priceScore,
+        discountScore,
+        profitMarginScore,
+        numberOfVisitorScore
+      )
+    })
+
+  // Get most profitable hotel when considering the number of visitors and profit margin
+  def getMostProfitableHotel(bookingScoreList: View[BookingScore]): ProfitableHotel =
+    // Calculate avg score for economical hotel
+    val avgScorePerHotel = bookingScoreList.map(b => {
+      val avgScore = (b.numberOfVisitorScore + b.profitMarginScore) / 2
+
+      ProfitableHotel(
+        b.name,
+        b.city,
+        b.country,
+        avgScore,
+        b.numberOfVisitorScore,
+        b.profitMarginScore
+      )
+    })
+
+    // Get the largest avg score for profitable hotel
+    avgScorePerHotel.maxBy(_.avgScore)
 
   // Finding the most economical hotel based on the 3 criteria
   // Booking Price, Discount, Profit Margin
-  def getMostEconomistHotel: EconomistHotel =
-    // Get min, max, avg value on the 3 criteria
-    val avgScorePerHotel = analysisDataList.groupBy(_.hotel.hotelName).view.mapValues(bookings => {
-      // Normalization on the 3 criteria
-      val bookingPriceScore: Float = getScoreByKey(bookings, _.bookingPrice)
-      val discountScore: Float = getScoreByKey(bookings, _.discount)
-      val profitMarginScore: Float = getScoreByKey(bookings, _.profitMargin)
+  def getMostEconomistHotel(bookingScoreList: View[BookingScore]): EconomistHotel =
+    // Calculate avg score for profitable hotel
+    val avgScorePerHotel = bookingScoreList.map(b => {
+      // Need to invert price and profit margin
+      // because lowest value is the most economist for customers
+      val invertPrice = 1 - b.priceScore
+      val invertProfitMargin = 1 - b.profitMarginScore
+      // Calculate avg score
+      val avgScore = (invertPrice + b.discountScore + invertProfitMargin) / 3
 
-      // Invert price score and profit margin score -> higher is better for customers
-      val invertBookingPriceScore: Float = 1 - bookingPriceScore
-      val invertProfitMarginScore: Float = 1 - profitMarginScore
-
-      // Avg score
-      val avgScore: Float = (invertBookingPriceScore + discountScore + invertProfitMarginScore) / 3
-
-      (avgScore, invertBookingPriceScore, discountScore, invertProfitMarginScore)
+      EconomistHotel(
+        b.name,
+        b.city,
+        b.country,
+        avgScore,
+        invertPrice,
+        b.discountScore,
+        invertProfitMargin
+      )
     })
-    // Convert result into one object
-    // (Hotel name, avg score, price score, discount score, profit margin score)
-    .map(b => (b._1, b._2._1, b._2._2, b._2._3, b._2._4))
-    // Sort avg score descending
-    // Highest value is the most economical hotel for customers because we invert price and profit margin
-    .toList.sortBy(_._2).reverse
 
-    val (name, avgScore, priceScore, discountScore, profitMarginScore) = avgScorePerHotel.head
-
-    EconomistHotel(name, avgScore, priceScore, discountScore, profitMarginScore)
+    // Get the largest avg score for profitable hotel
+    avgScorePerHotel.maxBy(_.avgScore)
 
   override def showAnalysis(content: IPrintAnalysis): Unit =
     content match {
@@ -165,10 +223,10 @@ class HotelBookingAnalysis extends CsvUtil[Booking], IAnalysis[Booking]:
             |Country: $name
             |Number of booking: $numberOfBookings
             |""".stripMargin)
-      case EconomistHotel(name, avgScore, priceScore, discountScore, profitMarginScore) =>
+      case EconomistHotel(name, city, country, avgScore, priceScore, discountScore, profitMarginScore) =>
         println(
           s"""2. Most economical hotel
-             |Hotel: $name
+             |Hotel: $name ($city, $country)
              |Booking price score (%): ${
               NumberUtil.formatFloatValue(NumberUtil.convertNumberToPercentage(priceScore))}
              |Discount score (%): ${
@@ -178,12 +236,15 @@ class HotelBookingAnalysis extends CsvUtil[Booking], IAnalysis[Booking]:
              |Average score (%): ${
               NumberUtil.formatFloatValue(NumberUtil.convertNumberToPercentage(avgScore))}
              |""".stripMargin)
-      case ProfitableHotel(name, avgScore, numberOfVisitors, profitMarginScore) =>
+      case ProfitableHotel(name, city, country, avgScore, numberOfVisitorScore, profitMarginScore) =>
         println(
           s"""3. Most profitable Hotel
-             |Hotel: $name
-             |Total visitors: $numberOfVisitors
-             |Profit margin score: ${NumberUtil.formatFloatValue(profitMarginScore)}
-             |Avg score: ${NumberUtil.formatFloatValue(avgScore)}
+             |Hotel: $name ($city, $country)
+             |Number of visitor score (%): ${
+              NumberUtil.formatFloatValue(NumberUtil.convertNumberToPercentage(numberOfVisitorScore))}
+             |Profit margin score (%): ${
+              NumberUtil.formatFloatValue(NumberUtil.convertNumberToPercentage(profitMarginScore))}
+             |Avg score (%): ${
+              NumberUtil.formatFloatValue(NumberUtil.convertNumberToPercentage(avgScore))}
              |""".stripMargin)
     }
